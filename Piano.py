@@ -58,14 +58,18 @@ while True:
 
         if keys[key]: #if the key IS being pressed
             
-            if key not in played_keys: #and we do not have a record of that key already having started being held
+            if key not in played_keys: #and we do not have a record of that key already having started being held. In other words, if this key is being held and we have just now started to hold it
                 player.note_on(note, 127) # play note
-                played_keys.append(key) #save the fact that we have started holding this key
+                played_keys.append(key) #save the fact that we have not let go of this key yet
 
         else: #if the key is not being pressed
-            if key in played_keys: #AND we have a record of that key having started being held just now
-                player.note_off(note, 127) #stop pressing the key
-                played_keys.remove(key) #pretend this key was never pressed
+            if key in played_keys: #AND we have a record of that key not being let go of
+                player.note_off(note, 127) #tell pygame to stop playing that note
+                played_keys.remove(key) #remove it to acknowledge that key has been let go of
+    #in other words, checking for pygame.key.get_pressed() will check if the key is being pressed which will result in it being spammed since it is pressed 60 frames per 
+    #however, with our list, we instead check if it is STILL being HELD rather than PRESSED
+        
+    
     
     #uhhhhhh it works, will prolly tidy it up later lol
     if keys[pygame.K_a]:
