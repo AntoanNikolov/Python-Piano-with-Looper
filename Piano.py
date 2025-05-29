@@ -1,4 +1,30 @@
 import pygame
+import pygame.midi
+pygame.midi.init()
+
+player = pygame.midi.Output(0)
+player.set_instrument(0)  #id for piano
+
+key_to_note = {
+    pygame.K_a: 60, #C
+    pygame.K_w: 61, #C#
+    pygame.K_s: 62, #D
+    pygame.K_e: 63, #D#
+    pygame.K_d: 64, #E
+    pygame.K_f: 65, #F
+    pygame.K_t: 66, #F#
+    pygame.K_g: 67, #G
+    pygame.K_y: 68, #G#
+    pygame.K_h: 69, #A
+    pygame.K_u: 70, #A#
+    pygame.K_j: 71, #B
+    pygame.K_k: 72, #C (next octave)
+    pygame.K_o: 73, #C#
+    pygame.K_l: 74, #D
+    pygame.K_p: 75, #D#
+    pygame.K_SEMICOLON: 76, #E
+    pygame.K_QUOTE: 77 #F
+}
 
 pygame.init()
 pygame.mixer.init()
@@ -19,13 +45,29 @@ marker_image = pygame.transform.scale(marker_image_raw, (35, 35))
 
 
 
+played_keys = [] #note: this is different from pygame.key.get_pressed()
 while True:  
     screen.blit(piano_surface, (0, 0))
     screen.blit(title_surface, (430, 50))
 
-    #uhhhhhh it works, will prolly tidy it up later lol
+    #stores whatever keys are pressed
     keys = pygame.key.get_pressed()
 
+    
+    for key, note in key_to_note.items(): #go through each key-note relationship
+
+        if keys[key]: #if the key IS being pressed
+            
+            if key not in played_keys: #and we do not have a record of that key already having started being held
+                player.note_on(note, 127) # play note
+                played_keys.append(key) #save the fact that we have started holding this key
+
+        else: #if the key is not being pressed
+            if key in played_keys: #AND we have a record of that key having started being held just now
+                player.note_off(note, 127) #stop pressing the key
+                played_keys.remove(key) #pretend this key was never pressed
+    
+    #uhhhhhh it works, will prolly tidy it up later lol
     if keys[pygame.K_a]:
         screen.blit(marker_image, (147, 215))
     if keys[pygame.K_w]:
