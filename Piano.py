@@ -2,7 +2,7 @@ import pygame
 import pygame.midi
 pygame.midi.init()
 
-player = pygame.midi.Output(0)
+player = pygame.midi.Output(1) #0 for Windows
 player.set_instrument(0)  #id for piano
 
 
@@ -70,11 +70,13 @@ while True:
             if key not in played_keys: #and we do not have a record of that key already having started being held. In other words, if this key is being held and we have just now started to hold it
                 player.note_on(note + octave_shift, 127) # play note
                 played_keys.append(key) #save the fact that we have not let go of this key yet
+                print(key)
 
         else: #if the key is not being pressed
             if key in played_keys: #AND we have a record of that key not being let go of
                 player.note_off(note + octave_shift, 127) #tell pygame to stop playing that note
                 played_keys.remove(key) #remove it to acknowledge that key has been let go of
+                print(f"released {key}")
     #in other words, checking for pygame.key.get_pressed() will check if the key is being pressed which will result in it being spammed since it is pressed 60 frames per 
     #however, with our list, we instead check if it is STILL being HELD rather than PRESSED
         
