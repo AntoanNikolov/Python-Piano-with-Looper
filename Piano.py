@@ -1,6 +1,8 @@
 import pygame
 import pygame.midi
 pygame.midi.init()
+#Make it track the time each key is being held for, and the time for each key between key release and key activation
+
 
 player = pygame.midi.Output(1) #0 for Windows
 player.set_instrument(0)  #id for piano
@@ -52,7 +54,8 @@ marker_image = pygame.transform.scale(marker_image_raw, (35, 35))
 
 
 
-
+hold_counter = 0
+release_counter = 0
 played_keys = [] #note: this is different from pygame.key.get_pressed()
 while True:  
     screen.blit(piano_surface, (0, 0))
@@ -61,7 +64,8 @@ while True:
 
     #stores whatever keys are pressed
     keys = pygame.key.get_pressed()
-
+    release_counter+=1
+    print(release_counter)
     
     for key, note in key_to_note.items(): #go through each key-note relationship
 
@@ -70,13 +74,16 @@ while True:
             if key not in played_keys: #and we do not have a record of that key already having started being held. In other words, if this key is being held and we have just now started to hold it
                 player.note_on(note + octave_shift, 127) # play note
                 played_keys.append(key) #save the fact that we have not let go of this key yet
+                release_counter = 0
                 print(key)
+
 
         else: #if the key is not being pressed
             if key in played_keys: #AND we have a record of that key not being let go of
                 player.note_off(note + octave_shift, 127) #tell pygame to stop playing that note
                 played_keys.remove(key) #remove it to acknowledge that key has been let go of
                 print(f"released {key}")
+                hold_counter = 0
     #in other words, checking for pygame.key.get_pressed() will check if the key is being pressed which will result in it being spammed since it is pressed 60 frames per 
     #however, with our list, we instead check if it is STILL being HELD rather than PRESSED
         
@@ -85,6 +92,9 @@ while True:
     #uhhhhhh it works, will prolly tidy it up later lol
     if keys[pygame.K_a]:
         screen.blit(marker_image, (147, 215))
+        
+        hold_counter +=1
+        print(hold_counter)
     if keys[pygame.K_w]:
         screen.blit(marker_image, (210, 140))
     if keys[pygame.K_e]:
@@ -138,6 +148,8 @@ while True:
 
                 octave_text = f"{octave}"
                 octave_surface = test_font.render(octave_text, False, 'White') #blit it again in here for updated value
+            #elif event.key == pygame.K_z:
+
 
 
             
