@@ -65,7 +65,7 @@ while True:
     #stores whatever keys are pressed
     keys = pygame.key.get_pressed()
     release_counter+=1
-    print(release_counter)
+    print(f"Release: {release_counter}")
     
     for key, note in key_to_note.items(): #go through each key-note relationship
 
@@ -74,8 +74,7 @@ while True:
             if key not in played_keys: #and we do not have a record of that key already having started being held. In other words, if this key is being held and we have just now started to hold it
                 player.note_on(note + octave_shift, 127) # play note
                 played_keys.append(key) #save the fact that we have not let go of this key yet
-                release_counter = 0
-                print(key)
+                print(f"Current key {key}")
 
 
         else: #if the key is not being pressed
@@ -92,9 +91,9 @@ while True:
     #uhhhhhh it works, will prolly tidy it up later lol
     if keys[pygame.K_a]:
         screen.blit(marker_image, (147, 215))
-        
+        release_counter = 0
         hold_counter +=1
-        print(hold_counter)
+        print(f"Hold Counter: {hold_counter}")
     if keys[pygame.K_w]:
         screen.blit(marker_image, (210, 140))
     if keys[pygame.K_e]:
