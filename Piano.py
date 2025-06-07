@@ -4,7 +4,7 @@ pygame.midi.init()
 #Make it track the time each key is being held for, and the time for each key between key release and key activation
 
 
-player = pygame.midi.Output(1) #0 for Windows
+player = pygame.midi.Output(0) #0 for Windows
 player.set_instrument(0)  #id for piano
 
 
@@ -54,18 +54,31 @@ marker_image = pygame.transform.scale(marker_image_raw, (35, 35))
 
 
 
-hold_counter = 0
-release_counter = 0
 played_keys = [] #note: this is different from pygame.key.get_pressed()
+
+#variables for playback
+recording = False
+playing = False
+recorded = [] #storing tuples of the time the note was played, the note, and whether it was played or released
+record_start = 0 #when recording started
+loop_length = 0 #how long the loop is
+play_start = 0
+current_event = 0 #
+held_keys = []
+
+def record_event(note, action):
+    t = pygame.time.get_ticks() - record_start
+    recorded.append((t, note, action)) #action is either on or off
+
+
 while True:  
+    now = pygame.time.get_ticks() #check the time in the game
     screen.blit(piano_surface, (0, 0))
     screen.blit(title_surface, (430, 50))
     screen.blit(octave_surface, (110,305)) #initally blit it
 
     #stores whatever keys are pressed
     keys = pygame.key.get_pressed()
-    release_counter+=1
-    print(f"Release: {release_counter}")
     
     for key, note in key_to_note.items(): #go through each key-note relationship
 
@@ -74,7 +87,8 @@ while True:
             if key not in played_keys: #and we do not have a record of that key already having started being held. In other words, if this key is being held and we have just now started to hold it
                 player.note_on(note + octave_shift, 127) # play note
                 played_keys.append(key) #save the fact that we have not let go of this key yet
-                print(f"Current key {key}")
+                if recording == True:
+                    record_event(note + octave_shift, 'on')
 
 
         else: #if the key is not being pressed
@@ -82,7 +96,8 @@ while True:
                 player.note_off(note + octave_shift, 127) #tell pygame to stop playing that note
                 played_keys.remove(key) #remove it to acknowledge that key has been let go of
                 print(f"released {key}")
-                hold_counter = 0
+                if recording == True:
+                    record_event(note + octave_shift, 'off')
     #in other words, checking for pygame.key.get_pressed() will check if the key is being pressed which will result in it being spammed since it is pressed 60 frames per 
     #however, with our list, we instead check if it is STILL being HELD rather than PRESSED
         
@@ -91,9 +106,6 @@ while True:
     #uhhhhhh it works, will prolly tidy it up later lol
     if keys[pygame.K_a]:
         screen.blit(marker_image, (147, 215))
-        release_counter = 0
-        hold_counter +=1
-        print(f"Hold Counter: {hold_counter}")
     if keys[pygame.K_w]:
         screen.blit(marker_image, (210, 140))
     if keys[pygame.K_e]:
@@ -147,7 +159,49 @@ while True:
 
                 octave_text = f"{octave}"
                 octave_surface = test_font.render(octave_text, False, 'White') #blit it again in here for updated value
-            #elif event.key == pygame.K_z:
+
+            elif event.key == pygame.K_r:
+                if not recording:
+                    recording = True
+                    recorded.clear()
+                    record_start = now
+                    print('Recording started')
+                else:
+                    recording = False
+                    loop_length = now - record_start
+                    print(f'Recording stopped, {loop_length} ticks')
+
+            #pause and loop
+            elif event.key == pygame.K_SPACE:
+                if not playing:
+                    playing = True
+                    play_start = now
+                    current_event = 0
+                    print('Playback started')
+                else:
+                    playing = False
+                    for placeholder, n, placeholder1 in recorded:
+                        player.note_off(n, 127)
+                    print('Playback stopped')
+
+    #playback
+    if playing and recorded:
+        #now is now, play_start is when the loop begins, loop_length is how long it is. We use those to find WHERE we are in the loop.
+        time_in_loop = (now - play_start) % loop_length #while there are more recorded events left AND the next event’s timestamp is less than or equal to the current playback time
+
+        #playing the recorded notes
+        while current_event < len(recorded) and recorded[current_event][0] <= time_in_loop: #while the 
+            time_ms, note, action = recorded[current_event] #taking the parts of that tuple and storing them to perform checks
+            if action == 'on':
+                player.note_on(note, 127)
+            else:
+                player.note_off(note, 127)
+            current_event += 1
+
+        #restart if we've finished the full loop time
+        if (now - play_start) >= loop_length:
+            play_start = now
+            current_event = 0
 
 
 
