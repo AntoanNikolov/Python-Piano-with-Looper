@@ -4,7 +4,7 @@ pygame.midi.init()
 #Make it track the time each key is being held for, and the time for each key between key release and key activation
 
 
-player = pygame.midi.Output(0) #0 for Windows
+player = pygame.midi.Output(0) #0 for Windows, generally 1 for mac, there might not be audio if you system does not have a midi device built-in
 player.set_instrument(0)  #id for piano
 
 
@@ -187,10 +187,10 @@ while True:
     #playback
     if playing and recorded:
         #now is now, play_start is when the loop begins, loop_length is how long it is. We use those to find WHERE we are in the loop.
-        time_in_loop = (now - play_start) % loop_length #while there are more recorded events left AND the next event’s timestamp is less than or equal to the current playback time
+        time_in_loop = (now - play_start) % loop_length 
 
         #playing the recorded notes
-        while current_event < len(recorded) and recorded[current_event][0] <= time_in_loop: #while the 
+        while current_event < len(recorded) and recorded[current_event][0] <= time_in_loop: #while there are more recorded events left AND the next event’s timestamp is less than or equal to the current playback time
             time_ms, note, action = recorded[current_event] #taking the parts of that tuple and storing them to perform checks
             if action == 'on':
                 player.note_on(note, 127)
